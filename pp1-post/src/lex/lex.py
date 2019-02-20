@@ -95,6 +95,7 @@ def lexical_analysis_file(filename):
 				pos_offset = False
 				continue
 
+			# analyze comment
 			if pos + 1 < len(line):
 				if (character == '/' and line[pos+1] == '*'):
 					# this is multiple line comment, we should ignore next line untill we meet */
@@ -131,32 +132,41 @@ def lexical_analysis_file(filename):
 				lexical_analysis_output(word, line_num, pos, -1)
 				word = ''
 
+			# analysis Delimiter
 			if (character in token.DELIMITER and is_string == False):
-			# or character == ' ' or character == '\t' or character == '\n' ) and is_string == False:
 				
+				# ignore delimiter when current word is commment	
 				if is_multiple_comment == True:
 					word = ""
 					
 				if len(word) != 0 and character not in  '.+':
 					if word[-1] not in ' \t\n<=>\0':
 						lexical_analysis_output(word, line_num, pos, T_DoubleConstant if is_double else -1)
+						word = ''
 					is_new_word = True
 									
 				if character in token.BAD_DELIMITER:
 					lexical_analysis_error_output("\n*** Error line {0}.\n*** Unrecognized char: '{1}'\n".format(line_num, character))
 					is_new_word = True
 				elif character in token.GOOD_DELIMITER:
+					# analyze <=, >=, ==
 					if pos + 1 < len(line) and line[pos] in '<=>' and  line[pos+1] == '=':
 						pass
+					elif pos > 0 and line[pos-1] in '<=>' and character == '=':
+						lexical_analysis_output(word+character, line_num, pos+1, -1)
+						is_new_word = True
+					# analyze double. 1.12 etc.	
 					elif character in '.':
 						if len(word)>0 and  word.isdigit() == True:
 							is_double = True
 							if line[pos+1] in ' \t\n\0':
-								lexical_analysis_output(word, line_num, pos, -1)						
+								lexical_analysis_output(word, line_num, pos, -1)	
+								is_new_word = True					
 						else:
 							lexical_analysis_output(word, line_num, pos, -1)						
 							lexical_analysis_output(character, line_num, pos+1, -1)
 							is_new_word = True
+					# analyze double. 1.12E+2
 					elif character == '+':
 						if is_double != True:	
 							lexical_analysis_output(word, line_num, pos, -1)
@@ -169,6 +179,7 @@ def lexical_analysis_file(filename):
 							is_new_word = True
 							is_double = False
 							pass
+					# analyze Identifier, for example abc_123
 					elif character == '_':
 						lexical_analysis_output(word+character, line_num, pos+1, -1)
 						is_new_word = True
@@ -208,3 +219,4 @@ if __name__ == "__main__":
 	lexical_analysis_file("../../samples/badident.frag")
 	lexical_analysis_file("../../samples/ident.frag")
 	lexical_analysis_file("../../samples/badstring.frag")
+	lexical_analysis_file("../../samples/program.decaf")
