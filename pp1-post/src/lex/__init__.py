@@ -1,2 +1,2 @@
-__all__ = ["lex", "token", ]
+__all__ = ["lex", "tokens", ]
 
