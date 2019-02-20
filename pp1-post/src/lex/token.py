@@ -3,7 +3,10 @@ KEYWORDS = ["void", "int", "double", "bool", "string", "null", "for", "while" ,"
 
 PUNCTUATIONS = ["=", "!", "+", "-", "*", "/", "%", "<", "<=", ">", ">=", "=", "==", "!=", "&&", "||", "!", ";", ",", ".", "(", ")", "{", "}",]
 
-DELIMITER = '+-*/%<>=!;,.(){}$@^&~`? \t\n' 
+
+ALPHABET = 'ABCDEFGHIJKLMNORSTPQUVWXYZabcdefghijklmnopqrstuvwxyz'
+
+DELIMITER = '+-*/%<>=!;,.(){}$@^&~`? \t\n\0' 
 GOOD_DELIMITER = '+-*/%<>=!,.(){}'
 BAD_DELIMITER= '$@^&~`?'
 BOOL= ["true", "false"]
