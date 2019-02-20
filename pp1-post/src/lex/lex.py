@@ -120,13 +120,17 @@ def lexical_analysis_file(filename):
 			if character == '\"':
 				# is string
 				if is_string == True:
-					word += character
-					lexical_analysis_output(word, line_num, pos+1, T_StringConstant)
+					# string end
+					lexical_analysis_output(word+character, line_num, pos+1, T_StringConstant)
 					is_new_word = True
 					is_string = False
 				else:
+					# mark current sentence is a string
 					is_string = True
-	
+					# " is a delimiter, output result, clear word, and currently still wait to store " into word.
+					lexical_analysis_output(word, line_num, pos, -1)
+					word = ""
+		
 			# analysis integer
 			if character in token.ALPHABET and word.isdigit() and is_string == False:
 				lexical_analysis_output(word, line_num, pos, -1)
@@ -139,8 +143,8 @@ def lexical_analysis_file(filename):
 				if is_multiple_comment == True:
 					word = ""
 					
-				if len(word) != 0 and character not in  '.+':
-					if word[-1] not in ' \t\n<=>\0':
+				if len(word) != 0 and character not in  '.+_':
+					if word[-1] not in token.SPACE and word[-1] not in '<=>':
 						lexical_analysis_output(word, line_num, pos, T_DoubleConstant if is_double else -1)
 						word = ''
 					is_new_word = True
@@ -178,7 +182,6 @@ def lexical_analysis_file(filename):
 							lexical_analysis_output(character, line_num, pos+1, -1)
 							is_new_word = True
 							is_double = False
-							pass
 					# analyze Identifier, for example abc_123
 					elif character == '_':
 						lexical_analysis_output(word+character, line_num, pos+1, -1)
@@ -191,12 +194,11 @@ def lexical_analysis_file(filename):
 					#lexical_analysis_output(word, line_num, pos, -1)
 					is_new_word = True	
 			elif is_string == True:
-					if character == '\n':
-						lexical_analysis_error_output("\n*** Error line {0}.\n*** Unterminated string constant: {1}\n".format(line_num, word))
-					elif character == '\"':
-						if len(word) > 0:
-							lexical_analysis_output(word, line_num, pos, -1)
-						word = ""
+				# Analyze unterminated string constant, for example, "i am a student. 	
+				if character in '\n\0':
+					lexical_analysis_error_output("\n*** Error line {0}.\n*** Unterminated string constant: {1}\n".format(line_num, word))		
+					is_string = False
+					is_new_word = True
 			if is_new_word == False:
 				word += character
 			else:
