@@ -10,6 +10,11 @@ for filename in input_files:
 	print("lexical program analyse file: "+filename)
 	lex.lexical_analysis_file(filename)
 
+filename = "../samples/program.decaf"
+print("lexical program analyse file: "+filename)
+lex.lexical_analysis_file(filename)
+
+
 
 	
 

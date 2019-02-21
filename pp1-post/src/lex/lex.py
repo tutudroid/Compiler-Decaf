@@ -33,6 +33,7 @@ def my_print(string, op):
 def lexical_analysis_error_output(string):
 	my_print(string, "a+")
 
+"""
 def lexical_analysis_output1(word, line_number, pos, l_type):
 	if len(word) == 0:
 		return 
@@ -69,8 +70,6 @@ def lexical_analysis_output1(word, line_number, pos, l_type):
 			if len(word) > 31:
 				string+= " (truncated to {0})".format(word[:31])
 	my_print(string+"\n", "a+")
-
-
 
 def lexical_analysis_line(line, line_num, offset):
 	word = ""
@@ -157,6 +156,7 @@ def lexical_analysis_line(line, line_num, offset):
 		if pos + 1 == len(line) and is_new_word == False:
 			if is_string == False:
 				lexical_analysis_output1(word, line_num, pos+1+offset, -1)
+"""
 	
 # analyse #define
 define_list = {}
@@ -199,10 +199,11 @@ def lexical_analysis_output(word, line_number, pos, l_type):
 	if word[0] == '#' and word not in define_list and word != "#define":
 		lexical_analysis_error_output("\n*** Error line {0}.\n*** Invalid # directive\n\n".format(line_number))	
 		return 
+	"""
 	elif word in define_list:
 		lexical_analysis_line(define_list[word], line_number, pos-len(word))
 		return
-
+	"""
 
 	if lexical_analysis_define(word, line_number, l_type) == True:
 		return	
@@ -242,7 +243,7 @@ def lexical_analysis_output(word, line_number, pos, l_type):
 # analysis each file
 def lexical_analysis_file(filename):
 	analysis_comment.lexical_analysis_comment(filename)
-	analysis_define.lexical_analysis_file(filename)
+	analysis_define.lexical_analysis_file(".tmp-comment")
 	global FILENAME
 	FILENAME = filename.split('/')[-1].split('.')[0]
 	
@@ -281,30 +282,7 @@ def lexical_analysis_file(filename):
 				global last_word
 				define_list[last_word] = line[pos:]
 				break
-
-			# analyze comment
-			if pos + 1 < len(line):
-				if (character == '/' and line[pos+1] == '*'):
-					# this is multiple line comment, we should ignore next line untill we meet */
-					is_multiple_comment = True
-					# we need to ignore current word, and continue to scan new word. 
-					is_new_word = True
-
-				if character == '*' and line[pos+1] == '/' and is_multiple_comment == True:
-					# this is multiple line comment, we should ignore next line untill we meet */
-					
-					is_multiple_comment = False
-					is_new_word = True
-					word = ""
-					pos_offset = True
-					
-					continue
-				if character == '/' and line[pos+1] == '/' and is_multiple_comment == False:
-					# this is single line comment, we should ignore the remaining line.
-					break
-			if is_multiple_comment == True:
-				continue	
-  
+	
 			# Comment should be analyzed firstly. /* has the higher priority than //.				
 			if character == '\"':
 				# is string
