@@ -12,6 +12,7 @@ sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 #from .lex import tokens
 import tokens
 import analysis_comment
+import analysis_define
 
 T_StringConstant = 1
 T_IntConstant = 2
@@ -23,7 +24,7 @@ T_Keyword = 6
 FILENAME = ""
 
 def my_print(string, op):
-	print(string, end='')
+#	print(string, end='')
 	f = open("./output/"+FILENAME+".out", op) 
 	f.write(string)
 	f.close()
@@ -202,6 +203,7 @@ def lexical_analysis_output(word, line_number, pos, l_type):
 		lexical_analysis_line(define_list[word], line_number, pos-len(word))
 		return
 
+
 	if lexical_analysis_define(word, line_number, l_type) == True:
 		return	
 
@@ -240,18 +242,20 @@ def lexical_analysis_output(word, line_number, pos, l_type):
 # analysis each file
 def lexical_analysis_file(filename):
 	analysis_comment.lexical_analysis_comment(filename)
+	analysis_define.lexical_analysis_file(filename)
 	global FILENAME
 	FILENAME = filename.split('/')[-1].split('.')[0]
 	
 	my_print("", "w")	
 
-	f = open('tmp.comment', "r")
+	f = open('.tmp-clean', "r")
 
 	line_num = 0
 	is_multiple_comment = False
 	
 	for line in f.readlines():
 		line_num += 1
+
 
 		word = ""
 		pos = 0

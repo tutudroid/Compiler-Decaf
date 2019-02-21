@@ -9,7 +9,7 @@ from __future__ import print_function
 
 def my_print(string, op):
 	#print(string, end='')
-	f = open("tmp.comment", op) 
+	f = open(".tmp-comment", op) 
 	f.write(string)
 	f.close()
 

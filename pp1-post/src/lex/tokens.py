@@ -1,5 +1,5 @@
 
-KEYWORDS = ["void", "int", "double", "bool", "string", "null", "for", "while" ,"if", "else", "return", "break", "Print","ReadInteger", "ReadLine", ]
+KEYWORDS = ["void", "int", "double", "bool", "string", "null", "for", "while" ,"if", "else", "return", "break", "ReadInteger", "ReadLine", ]
 
 PUNCTUATIONS = ["=", "!", "+", "-", "*", "/", "%", "<", "<=", ">", ">=", "=", "==", "!=", "&&", "||", "!", ";", ",", ".", "(", ")", "{", "}",]
 
