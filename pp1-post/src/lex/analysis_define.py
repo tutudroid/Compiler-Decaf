@@ -8,9 +8,7 @@ import sys
 from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 
-#import lex
-#from .lex import tokens
-import tokens
+from . import tokens
 
 def my_print(string, op="a+"):
 	#print(string, end='')
@@ -76,7 +74,3 @@ def lexical_analysis_file(filename):
 
 	f.close()		
 
-# read all file name 
-if __name__ == "__main__":
-	lexical_analysis_file("../../samples/badpre.frag")
-	lexical_analysis_file("../../samples/define.frag")

@@ -8,11 +8,9 @@ import sys
 from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 
-#import lex
-#from .lex import tokens
-import tokens
-import analysis_comment
-import analysis_define
+from . import tokens
+from . import analysis_comment
+from . import analysis_define
 
 T_StringConstant = 1
 T_IntConstant = 2
@@ -217,26 +215,26 @@ def lexical_analysis_output(word, line_number, pos, l_type):
 		string += "T_DoubleConstant (value = {0:g})".format(value)
 	else:
 		if word in tokens.KEYWORDS:
-			string += "T_{0}".format(word.capitalize())
+			string += "T_{0} ".format(word.capitalize())
 		elif word in tokens.PUNCTUATIONS:
 			if word == "||":
-				string += "T_Or"
+				string += "T_Or "
 			elif word == "<=":
-				string += "T_LessEqual"
+				string += "T_LessEqual "
 			elif word == ">=":
-				string += "T_GreaterEqual"
+				string += "T_GreaterEqual "
 			elif word == "==":
-				string += "T_Equal"
+				string += "T_Equal "
 			else:
-				string += "'{0}'".format(word)
+				string += "'{0}' ".format(word)
 		elif word in tokens.BOOL:
 			string += "T_BoolConstant (value = {0})".format(word)
 		elif word.isdigit():
 			string += "T_IntConstant (value = {0})".format(int(word))
 		else:
-			string += "T_Identifier"
+			string += "T_Identifier "
 			if len(word) > 31:
-				string+= " (truncated to {0})".format(word[:31])
+				string+= "(truncated to {0})".format(word[:31])
 	my_print(string+"\n", "a+")
 
 
@@ -383,14 +381,3 @@ def lexical_analysis_file(filename):
 				#	lexical_analysis_error_output("\n*** Error line {0}.\n*** Unterminated st    ring constant: {1}\n".format(line_num, word))
 	f.close()		
 
-# read all file name 
-if __name__ == "__main__":
-	lexical_analysis_file("../../samples/comment.frag")
-	lexical_analysis_file("../../samples/badop.frag")
-	lexical_analysis_file("../../samples/reserve_op.frag")
-	lexical_analysis_file("../../samples/baddouble.frag")
-	lexical_analysis_file("../../samples/number.frag")	
-	lexical_analysis_file("../../samples/badident.frag")
-	lexical_analysis_file("../../samples/ident.frag")
-	lexical_analysis_file("../../samples/badstring.frag")
-	lexical_analysis_file("../../samples/badpre.frag")

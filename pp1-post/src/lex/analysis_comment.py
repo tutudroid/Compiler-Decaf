@@ -66,14 +66,3 @@ def lexical_analysis_comment(filename):
 				my_print(character, "a+")
 	f.close()		
 
-# read all file name 
-if __name__ == "__main__":
-	#lexical_analysis_comment("../../samples/badop.frag")
-	#lexical_analysis_comment("../../samples/reserve_op.frag")
-	#lexical_analysis_comment("../../samples/baddouble.frag")
-	#lexical_analysis_comment("../../samples/number.frag")	
-	#lexical_analysis_comment("../../samples/badident.frag")
-	#lexical_analysis_comment("../../samples/ident.frag")
-	#lexical_analysis_comment("../../samples/badstring.frag")
-	lexical_analysis_comment("../../samples/badpre.frag")
-	#lexical_analysis_comment("../../samples/comment.frag")
