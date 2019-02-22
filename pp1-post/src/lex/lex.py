@@ -24,7 +24,7 @@ T_Keyword = 6
 FILENAME = ""
 
 def my_print(string, op):
-#	print(string, end='')
+	print(string, end='')
 	f = open("./output/"+FILENAME+".out", op) 
 	f.write(string)
 	f.close()
