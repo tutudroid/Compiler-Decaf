@@ -1,0 +1,96 @@
+void         line 1 cols 1-4 is T_Void 
+main         line 1 cols 6-9 is T_Identifier 
+(            line 1 cols 10-10 is '(' 
+)            line 1 cols 11-11 is ')' 
+{            line 1 cols 13-13 is '{' 
+int          line 2 cols 3-5 is T_Int 
+a            line 2 cols 7-7 is T_Identifier 
+;            line 2 cols 8-8 is ';' 
+bool         line 3 cols 3-6 is T_Bool 
+done         line 3 cols 8-11 is T_Identifier 
+;            line 3 cols 12-12 is ';' 
+a            line 5 cols 3-3 is T_Identifier 
+=            line 5 cols 5-5 is '=' 
+0            line 5 cols 7-7 is T_IntConstant (value = 0)
+;            line 5 cols 8-8 is ';' 
+while        line 6 cols 3-7 is T_While 
+(            line 6 cols 9-9 is '(' 
+a            line 6 cols 10-10 is T_Identifier 
+<            line 6 cols 12-12 is '<' 
+10           line 6 cols 14-15 is T_IntConstant (value = 10)
+)            line 6 cols 16-16 is ')' 
+{            line 6 cols 18-18 is '{' 
+Print        line 7 cols 2-6 is T_Identifier 
+(            line 7 cols 7-7 is '(' 
+a            line 7 cols 8-8 is T_Identifier 
+,            line 7 cols 9-9 is ',' 
+" "          line 7 cols 11-13 is T_StringConstant (value = " ")
+)            line 7 cols 14-14 is ')' 
+;            line 7 cols 15-15 is ';' 
+a            line 8 cols 2-2 is T_Identifier 
+=            line 8 cols 4-4 is '=' 
+a            line 8 cols 6-6 is T_Identifier 
++            line 8 cols 8-8 is '+' 
+1            line 8 cols 10-10 is T_IntConstant (value = 1)
+;            line 8 cols 11-11 is ';' 
+if           line 9 cols 2-3 is T_If 
+(            line 9 cols 5-5 is '(' 
+a            line 9 cols 6-6 is T_Identifier 
+==           line 9 cols 8-9 is T_Equal 
+5            line 9 cols 11-11 is T_IntConstant (value = 5)
+)            line 9 cols 12-12 is ')' 
+break        line 9 cols 14-18 is T_Break 
+;            line 9 cols 19-19 is ';' 
+}            line 10 cols 3-3 is '}' 
+if           line 11 cols 3-4 is T_If 
+(            line 11 cols 6-6 is '(' 
+a            line 11 cols 7-7 is T_Identifier 
+%            line 11 cols 9-9 is '%' 
+2            line 11 cols 11-11 is T_IntConstant (value = 2)
+==           line 11 cols 13-14 is T_Equal 
+0            line 11 cols 16-16 is T_IntConstant (value = 0)
+)            line 11 cols 17-17 is ')' 
+a            line 12 cols 6-6 is T_Identifier 
+=            line 12 cols 8-8 is '=' 
+1            line 12 cols 10-10 is T_IntConstant (value = 1)
+;            line 12 cols 11-11 is ';' 
+else         line 13 cols 3-6 is T_Else 
+done         line 14 cols 6-9 is T_Identifier 
+=            line 14 cols 11-11 is '=' 
+true         line 14 cols 13-16 is T_BoolConstant (value = true)
+;            line 14 cols 17-17 is ';' 
+for          line 16 cols 3-5 is T_For 
+(            line 16 cols 7-7 is '(' 
+;            line 16 cols 8-8 is ';' 
+a            line 16 cols 10-10 is T_Identifier 
+<=           line 16 cols 12-13 is T_LessEqual 
+10           line 16 cols 15-16 is T_IntConstant (value = 10)
+||           line 16 cols 18-19 is T_Or 
+done         line 16 cols 21-24 is T_Identifier 
+;            line 16 cols 25-25 is ';' 
+a            line 16 cols 27-27 is T_Identifier 
+=            line 16 cols 29-29 is '=' 
+a            line 16 cols 31-31 is T_Identifier 
++            line 16 cols 33-33 is '+' 
+1            line 16 cols 35-35 is T_IntConstant (value = 1)
+)            line 16 cols 36-36 is ')' 
+{            line 16 cols 38-38 is '{' 
+Print        line 17 cols 6-10 is T_Identifier 
+(            line 17 cols 11-11 is '(' 
+a            line 17 cols 12-12 is T_Identifier 
+,            line 17 cols 13-13 is ',' 
+" "          line 17 cols 15-17 is T_StringConstant (value = " ")
+)            line 17 cols 18-18 is ')' 
+;            line 17 cols 19-19 is ';' 
+if           line 18 cols 6-7 is T_If 
+(            line 18 cols 9-9 is '(' 
+a            line 18 cols 10-10 is T_Identifier 
+==           line 18 cols 12-13 is T_Equal 
+10           line 18 cols 15-16 is T_IntConstant (value = 10)
+)            line 18 cols 17-17 is ')' 
+a            line 18 cols 19-19 is T_Identifier 
+;            line 18 cols 20-20 is ';' 
+}            line 19 cols 3-3 is '}' 
+return       line 20 cols 3-8 is T_Return 
+;            line 20 cols 9-9 is ';' 
+}            line 21 cols 1-1 is '}' 

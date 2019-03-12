@@ -1,0 +1,26 @@
+void         line 1 cols 1-4 is T_Void 
+main         line 1 cols 6-9 is T_Identifier 
+(            line 1 cols 10-10 is '(' 
+)            line 1 cols 11-11 is ')' 
+{            line 1 cols 13-13 is '{' 
+x            line 2 cols 3-3 is T_Identifier 
+=            line 2 cols 5-5 is '=' 
+123.4        line 2 cols 7-11 is T_Identifier 
+.            line 2 cols 12-12 is '.' 
+554          line 2 cols 13-15 is T_DoubleConstant (value = 554)
+;            line 2 cols 16-16 is ';' 
+y            line 3 cols 3-3 is T_Identifier 
+=            line 3 cols 5-5 is '=' 
+x            line 3 cols 7-7 is T_Identifier 
+;            line 3 cols 8-8 is ';' 
+if           line 4 cols 3-4 is T_If 
+x            line 4 cols 6-6 is T_Identifier 
+Print        line 4 cols 8-12 is T_Identifier 
+(            line 4 cols 13-13 is '(' 
+"wacky"      line 4 cols 14-20 is T_StringConstant (value = "wacky")
+)            line 4 cols 21-21 is ')' 
+;            line 4 cols 22-22 is ';' 
+return       line 5 cols 3-8 is T_Return 
+true         line 5 cols 10-13 is T_BoolConstant (value = true)
+;            line 5 cols 14-14 is ';' 
+}            line 6 cols 1-1 is '}' 
