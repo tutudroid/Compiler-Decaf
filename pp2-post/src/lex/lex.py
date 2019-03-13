@@ -86,11 +86,11 @@ def lexical_analysis_output(word, line_number, pos, l_type):
 
 	string = '{0:12} line {1} cols {2}-{3} is '.format(word, line_number, pos - len(word)+1, pos)
 	if l_type == T_StringConstant:
-		string += 'StringConstant (value = {0})'.format(word)
+		string += 'T_StringConstant (value = {0})'.format(word)
 		word_type = "T_StringConstant"
 	elif l_type == T_DoubleConstant:
 		value = float(word.split('E+')[0]) * (1 if len(word.split('E+')) == 1 else 10**float(word.split('E+')[1]) )
-		word_type = "DoubleConstant"	
+		word_type = "T_DoubleConstant"	
 		string += "T_DoubleConstant (value = {0:g})".format(value)
 	else:
 		if word in tokens.KEYWORDS:
@@ -114,17 +114,17 @@ def lexical_analysis_output(word, line_number, pos, l_type):
 				word_type = '{0}'.format(word)
 		elif word in tokens.BOOL:
 			string += "T_BoolConstant (value = {0})".format(word)
-			word_type = "BoolConstant"
+			word_type = "T_BoolConstant"
 		elif word.isdigit():
 			string += "T_IntConstant (value = {0})".format(int(word))
-			word_type = "IntConstant"
+			word_type = "T_IntConstant"
 		else:
 			string += "T_Identifier "
 			word_type = "Identifier"
 			if len(word) > 31:
 				string+= "(truncated to {0})".format(word[:31])
 	my_print(string+"\n", "a+")
-	parser.parser_add_token(word, line_number, word_type)
+	parser.parser_add_token(word, line_number, word_type, pos)
 
 # analysis each file
 def lexical_analysis_file(filename):
