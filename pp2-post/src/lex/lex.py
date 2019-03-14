@@ -109,6 +109,12 @@ def lexical_analysis_output(word, line_number, pos, l_type):
 			elif word == "==":
 				string += "T_Equal "
 				word_type = "Equal"
+			elif word == "&&":
+				string += "T_And"
+				word_type = "And"
+			elif word == "!=":
+				string += "T_NotEqual "
+				word_type = "NotEqual" 
 			else:
 				string += "'{0}' ".format(word)
 				word_type = '{0}'.format(word)
@@ -191,25 +197,33 @@ def lexical_analysis_file(filename):
 
 			# analysis Delimiter
 			if (character in tokens.DELIMITER and is_string == False):
-				
-				# ignore delimiter when current word is commment	
-				if is_multiple_comment == True:
-					word = ""
-					
 				if len(word) != 0 and character not in  '.+_':
-					if word[-1] not in tokens.SPACE and word[-1] not in '<=>':
+					if word[-1] not in tokens.SPACE and word[-1] not in '<=>&|!':
 						lexical_analysis_output(word, line_num, pos, T_DoubleConstant if is_double else -1)
+						if is_double == True:
+							is_double = False
 						word = ''
 					is_new_word = True
-									
+
+				# analyze unrecognized character									
 				if character in tokens.BAD_DELIMITER:
 					lexical_analysis_error_output("\n*** Error line {0}.\n*** Unrecognized char: '{1}'\n\n".format(line_num, character))
 					is_new_word = True
+				elif character == '&' and ((pos + 1 <len(line) and line[pos+1] != '&') or pos +1 == len(line)) and ((pos > 0 and line[pos - 1] != '&') or pos == 0):
+					lexical_analysis_error_output("\n*** Error line {0}.\n*** Unrecognized char: '{1}'\n\n".format(line_num, character))
+					is_new_word = True
+				# analyze special delimiter
 				elif character in tokens.GOOD_DELIMITER:
-					# analyze <=, >=, ==
-					if pos + 1 < len(line) and line[pos] in '<=>' and  line[pos+1] == '=':
+					# analyze &&
+					if pos + 1 < len(line) and line[pos] in '&' and line[pos+1] == '&':
 						pass
-					elif pos > 0 and line[pos-1] in '<=>' and character == '=':
+					elif pos > 0 and line[pos-1] in '&' and character == '&':
+						lexical_analysis_output('&&', line_num, pos+1, -1)
+						is_new_word = True
+					# analyze <=, >=, ==, !=
+					elif pos + 1 < len(line) and line[pos] in '!<=>' and line[pos+1] == '=':
+						pass
+					elif pos > 0 and line[pos-1] in '!<=>' and character == '=':
 						lexical_analysis_output(word+character, line_num, pos+1, -1)
 						is_new_word = True
 					# analyze double. 1.12 etc.	
@@ -265,7 +279,5 @@ def lexical_analysis_file(filename):
 			if pos + 1 == len(line) and is_new_word == False:
 				if is_string == False:
 					lexical_analysis_output(word, line_num, pos+1, -1)
-				#else:
-				#	lexical_analysis_error_output("\n*** Error line {0}.\n*** Unterminated st    ring constant: {1}\n".format(line_num, word))
 	f.close()		
 

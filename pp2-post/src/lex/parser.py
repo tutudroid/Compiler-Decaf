@@ -102,7 +102,11 @@ def parser_add_token(word, line, l_type, offset):
 def parser_token():
 	global tokens
 
-	print(tokens)
+	i = 0
+	for token in tokens:
+		print(token, i)
+		i+=1
+
 	parser_program()
 	parser_output()
 
@@ -118,9 +122,8 @@ def parser_program():
 		
 	while cur_index < len(tokens):
 		if parser_Decl(cur_index, root):
-			
-			print("current index is {0}\n".format(cur_index))
 			cur_index = get_pivot() 
+			print("current index is {0}\n".format(cur_index))
 		else:
 			break
 	if cur_index >= len(tokens):
@@ -212,7 +215,7 @@ def StmtBlock(index):
 		
 		if term(index, '}'):
 			# pivot should be next token.
-			inc_pivot(2)
+			inc_pivot(1)
 			return True
 	print("stmtBlock error")	
 	return False
@@ -220,6 +223,7 @@ def StmtBlock(index):
 def Stmt(index):
 	old_index = index	
 	if ReturnStmt(index):
+		print("return statement is good, current{0}".format(get_pivot()))
 		return True
 	elif PrintStmt(index):
 		return True	
@@ -249,15 +253,17 @@ def Stmt(index):
 
 def ReturnStmt(index):
 	if term(index, "return"):
-		inc_pivot()
 		index += 1
-		
+		print("enter return")	
 		if Expr(index):
 			index = get_pivot()
-
+			print("enter Expr return {0}".format(index))
+		else:
+			inc_pivot()
 	if term(index, ';'):
 		inc_pivot()
 		return True
+	print("return is error, index {0}".format(index))
 	return False
 
 def PrintStmt(index):
@@ -341,14 +347,13 @@ def ForStmt(index):
 def Expr(index):
 	old_index = index
  
-	print("lvalue = expr.{0}{1}{2}".format(tokens[index][0], tokens[index+1][0],tokens[index+2][0]))	
 	if LValue(index) and LeftFactor(index+1):
 		print("lvvvvvvvvvvvvvvvv.{0}".format(index))
 		index = get_pivot()
 		print("lvvvvvvvvvvvvvvvv.{0}".format(index))
 		return True	
 	elif Constant(index):
-		print("constant -----------cussess")
+		print("constant -----------cussess.{0}".format(index))
 		index += 1
 	elif Call(index):
 		index = get_pivot()
@@ -371,24 +376,27 @@ def Expr(index):
 	return True
 
 def LeftFactor(index):
-	print("enter leftfactor0000000000000.{0}".format(index))
 	
 	if term(index, "=") and Expr(index+1):	
-		print("enter leftfactor0000000000000")
+		print("enter leftfactor term .{0}".format(get_pivot()))
+		# need to update index
+		index = get_pivot()
 		pass
 	Xprime(index)
+	print("enter leftfactor0000000000000. index {0} {1}".format(index, tokens[index][0]))
+		
 	return True		
 
 def Xprime(index):
 	old_index = index
-
+	print("enter xPrimre {0} {1}".format(index, tokens[index][0]))
 	if is_single_operator(index) and Expr(index+1):
-		inc_pivot(2)
+		set_pivot(index+2)	
 		return True
 
 	index = old_index
 	if is_double_operator(index) and Expr(index+2):
-		inc_pivot(3)
+		set_pivot(index+3)
 		return True 
 
 	set_pivot(old_index)
@@ -447,7 +455,9 @@ def term(index, word):
 
 def is_single_operator(index):
 	if index < len(tokens) and tokens[index][0] in "+-*/%<>":
-		return True	
+		return True
+	print("is single operator is wrong")
+	parser_error(index)	
 	return False
 
 def is_double_operator(index):
@@ -457,5 +467,6 @@ def is_double_operator(index):
 		return True
 	elif term(index, "|") and term(index+1, "|"):
 		return True
+	parser_error(index)
 	return False
 
