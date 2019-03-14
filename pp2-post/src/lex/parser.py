@@ -244,6 +244,8 @@ def Stmt(index):
 	if Expr(index):
 		print("enter Expr {0}".format(tokens[index][0]))
 		index = get_pivot()
+		print("enter Expr {0} {1}".format(index, tokens[index][0]))
+		
 	if term(index, ";"):
 		inc_pivot()
 		return True
@@ -258,10 +260,8 @@ def ReturnStmt(index):
 		if Expr(index):
 			index = get_pivot()
 			print("enter Expr return {0}".format(index))
-		else:
-			inc_pivot()
 	if term(index, ';'):
-		inc_pivot()
+		set_pivot(index+1)
 		return True
 	print("return is error, index {0}".format(index))
 	return False
@@ -274,11 +274,14 @@ def PrintStmt(index):
 	if term(index, "Print") and term(index+1, "("):
 		inc_pivot(2)
 		index += 2
+		print("enter print statememt3--------{0}".format(index))
 			
 		while Expr(index):
 			print("enter print statememt--------{0}".format(index))
 			
 			index = get_pivot()
+			print("enter print statememt2--------{0}".format(index))
+			
 			if term(index, ","):
 				index += 1
 			else:
@@ -330,7 +333,8 @@ def ForStmt(index):
 	old_index = index
 
 	if term(index, "for") and term(index+1, "("):
-		if Expr(index+2):
+		index += 2
+		if Expr(index):
 			index = get_pivot()
 		if term(index, ";") and Expr(index+1):
 			index = get_pivot()
@@ -346,33 +350,36 @@ def ForStmt(index):
 
 def Expr(index):
 	old_index = index
- 
-	if LValue(index) and LeftFactor(index+1):
-		print("lvvvvvvvvvvvvvvvv.{0}".format(index))
+
+	if Call(index):
 		index = get_pivot()
-		print("lvvvvvvvvvvvvvvvv.{0}".format(index))
-		return True	
 	elif Constant(index):
 		print("constant -----------cussess.{0}".format(index))
 		index += 1
-	elif Call(index):
-		index = get_pivot()
 	elif term(index, "(") and Expr(index+1):
 		index = get_pivot()
 		if term(index, ")"):
 			index += 1
 	elif term(index, "!") and Expr(index+1):
 		index = get_pivot()
-	elif term(index, "ReadInteger") and term(index, "(") and term(index, ")"):
+	elif term(index, "ReadInteger") and term(index+1, "(") and term(index+2, ")"):
 		index += 3
-	elif term(index, "ReadLine") and term(index, "(") and term(index, ")"):
-		index += 3 		
+	elif term(index, "ReadLine") and term(index+1, "(") and term(index+2, ")"):
+		index += 3 	
+	elif LValue(index):
+		set_pivot(index+1)
+		LeftFactor(index+1)
+		print("lvvvvvvvvvvvvvvvv.{0}".format(index))
+		index = get_pivot()
+		print("lvvvvvvvvvvvvvvvv.{0}".format(index))
+		return True	
 	else:
+		print("Expr error {0} {1} {2}".format(old_index, index, get_pivot()))
 		set_pivot(old_index)
 		return False
 	set_pivot(index)
 	Xprime(index)	
-	print("Expr is success, index {0}".format(index))
+	print("Expr is success, index {0}, {1}".format(index, get_pivot()))
 	return True
 
 def LeftFactor(index):
@@ -384,22 +391,19 @@ def LeftFactor(index):
 		pass
 	Xprime(index)
 	print("enter leftfactor0000000000000. index {0} {1}".format(index, tokens[index][0]))
-		
 	return True		
 
 def Xprime(index):
 	old_index = index
 	print("enter xPrimre {0} {1}".format(index, tokens[index][0]))
-	if is_single_operator(index) and Expr(index+1):
-		set_pivot(index+2)	
+	if is_single_operator(index) and Expr(index+1):	
 		return True
 
 	index = old_index
-	if is_double_operator(index) and Expr(index+2):
-		set_pivot(index+3)
+	if is_double_operator(index) and Expr(index+1):
 		return True 
 
-	set_pivot(old_index)
+	# set_pivot(old_index)
 	return True
 
 def LValue(index):
@@ -422,7 +426,7 @@ def Call(index):
 
 def Actuals(index):
 	print("actuals--------------------")
-	old_index = old	
+	old_index = index	
 	while Expr(index):
 		index = get_pivot()
 		if term(index, ','):
@@ -434,7 +438,6 @@ def Actuals(index):
 	return True
 
 def Constant(index):
-	print("constant---------{0} , {1}, {2}".format(index, tokens[index][2], tokens[index][0]))
 	if index < len(tokens) and tokens[index][2] in CONSTANT_TYPE:
 		print("constant---------------------")
 		return True 
@@ -456,17 +459,16 @@ def term(index, word):
 def is_single_operator(index):
 	if index < len(tokens) and tokens[index][0] in "+-*/%<>":
 		return True
-	print("is single operator is wrong")
+	print("is single operator is wrong {0}".format(index))
 	parser_error(index)	
 	return False
 
+DOUBLE_OPERATOR = ["==", "<=", ">=", "!=", "||", "&&"]
+
 def is_double_operator(index):
-	if index < len(tokens) and tokens[index][0] in "<>=!" and term(index+1, "="):
+	if index < len(tokens) and tokens[index][0] in DOUBLE_OPERATOR:
 		return True	
-	elif term(index, "&") and term(index+1, "&"):
-		return True
-	elif term(index, "|") and term(index+1, "|"):
-		return True
+	print("is double operator is wrong {0}".format(index, tokens[index][0]))
 	parser_error(index)
 	return False
 
