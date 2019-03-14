@@ -51,9 +51,12 @@ class TreeNode(object):
 		self.des = ""
 
 	def update(self, value, index, parent):
-		self.value = value
-		self.index = index
-		self.parent = parent
+		if value:
+			self.value = value
+		if index:
+			self.index = index
+		if parent:
+			self.parent = parent
 
 	def get_parent(self):
 		return self.parent
@@ -211,7 +214,7 @@ def Type(index, parent=None, callFunc=None):
 	string += "Type: {0}".format(tokens[index][2])
 
 	if index < len(tokens) and tokens[index][2] in string_type:
-		update_node(current, parent, string)	
+		update_node(current, parent, string.lower())	
 		return True
 	return False
 
@@ -489,11 +492,12 @@ def Expr(index, parent=None, callFunc=None):
 		index = get_pivot()
 		if term(index, ")"):
 			index += 1
-	elif term(index, "!", current) and Expr(index+1, current):
+	elif term(index, "!", tmp_node) and Expr(index+1, tmp_node):
 		index = get_pivot()
-	elif term(index, "ReadInteger") and term(index+1, "(") and term(index+2, ")"):
+		update_node(tmp_node, parent, "LogicalExpr:", index)
+	elif term(index, "ReadInteger", parent) and term(index+1, "(") and term(index+2, ")"):
 		index += 3
-	elif term(index, "ReadLine") and term(index+1, "(") and term(index+2, ")"):
+	elif term(index, "ReadLine", parent) and term(index+1, "(") and term(index+2, ")"):
 		index += 3 	
 	elif LValue(index, current):
 		set_pivot(index+1)
@@ -509,26 +513,56 @@ def Expr(index, parent=None, callFunc=None):
 	print("Expr is success, index {0}, {1}".format(index, get_pivot()))
 	return True
 
+def new_child_tree(parent=None):
+	# create new node
+	temp_node = new_node(parent)
+	if len(parent.children) > 0:
+		# add last token to new node	
+		first_node = parent.children[-1]
+		update_node(first_node, temp_node)
+	return temp_node
+
+def update_child_tree(child, parent=None, value=None, index=None):
+	if len(parent.children) > 0:
+		del parent.children[-1]
+	update_node(child, parent, value, index)
+	
 def LeftFactor(index, parent=None):
 	current = parent 
-	
-	if term(index, "=") and Expr(index+1, current):	
+
+	# create new node
+	temp_node = new_child_tree(parent)	
+
+	if term(index, "=", temp_node) and Expr(index+1, temp_node):	
 		# need to update index
-		index = get_pivot()		
+		index = get_pivot()	
+		
+		# delete parent last token, add new child tree to parent
+		update_child_tree(temp_node, parent, "AssignExpr:")
+		
 	Xprime(index, parent)
 	return True		
 
 def Xprime(index, parent=None):
-	current = parent
-
 	old_index = index
 	# this is a trick
-	new_parent = current
-	if is_single_operator(index, new_parent) and Expr(index+1, new_parent):	
+	current = new_child_tree(parent)
+	if is_single_operator(index, current) and Expr(index+1, current):
+		string = "ArithmeticExpr:"
+		if tokens[old_index][0] not in '+-*%/':
+			string = "RelationalExpr:"
+		update_child_tree(current, parent, string, index)	
 		return True
 
 	index = old_index
+	current = new_child_tree(parent)
 	if is_double_operator(index, current) and Expr(index+1, current):
+		string = "LogicalExpr:"
+		if tokens[old_index][0] == "==":
+			string = "EqualityExpr:"	
+		elif tokens[old_index][0] == "<=" or tokens[old_index][0] == ">=":
+			string = "RelationalExpr:"		
+		update_child_tree(current, parent, string, index)	
 		return True 
 
 	# set_pivot(old_index)
@@ -558,13 +592,13 @@ def Call(index, parent=None):
 	return False
 
 def Actuals(index, parent=None):
-	current = new_node(parent)
-		
+#	current = new_node(parent)
+	current = parent		
 	old_index = index	
 	while Expr(index, current):
 		# add node, must be in advance	
-		update_node(current, parent, "(actuals) ", index)
-		current = new_node(parent)
+		#update_node(current, parent, "(actuals) ", index)
+		#current = new_node(parent)
 		
 		index = get_pivot()
 		if term(index, ','):
@@ -573,7 +607,9 @@ def Actuals(index, parent=None):
 		else:
 			index = old_index
 			break
-
+	
+	add_pre_info_node(parent, "(actuals) ", 1)	
+	
 	return True
 
 def Constant(index, parent=None):
@@ -597,6 +633,8 @@ def identifier(index, parent=None):
 def term(index, word, parent=None): 
 	current = new_node(parent)
 	if index < len(tokens) and tokens[index][0] == word:
+		if tokens[index][0] == "ReadInteger":
+			update_node(current, parent, "ReadIntegerExpr:", index)
 		if tokens[index][0] in "!=":
 			update_node(current, parent, "Operator: {0}".format(tokens[index][0]), index)
 		return True
@@ -623,3 +661,10 @@ def is_double_operator(index, parent=None):
 	parser_error(index)
 	return False
 
+def add_pre_info_node(parent=None, value="", start=0):
+	i = 0
+	for child in parent.children:
+		if i >= start:
+			child.value = value + child.value 
+		i += 1
+	
