@@ -35,26 +35,59 @@ CONSTANT_TYPE = ["T_IntConstant", "T_DoubleConstant", "T_BoolConstant", "T_Strin
 # record the farest token when we meet error
 farest_index = 0
 
+"""
+	AST node 
+"""
+
 # AST root node
 root = None
 
 class TreeNode(object):
-    def __init__(self, parent, value):
-        self.parent = parent
-        self.children = []
+	def __init__(self, parent, value):
+		self.parent = parent
+		self.children = []
+		self.value = value
 
-        self.__dict__.update(**value)
+	def update(self, value):
+		self.value = value
+	
+	def output(self):
+		return '<TreeNode {0}>'.format(self.value)
 
-    def __repr__(self):
-        return '<TreeNode %s>' % self.value
+def new_node(value=None):
+	current = TreeNode(None, value)
+	return current	
 
-def add_node(parent, value):
-	current = TreeNode(parent, {"value": value})
-	parent.children.append(current)
+def update_node(current, parent, value):
+	if current and parent and value:
+		current.update(value)
+		parent.children.append(current)
+
+"""
+store token stream, and start parser program.
+"""
+def parser_add_token(word, line, l_type, offset):
+	#print("this is my first parser word=$0, line=$1, l_type=$2".format(word, line, l_type))
+	global tokens
+	tokens.append([word, line, l_type, offset])
+
+def parser_token():
+	global tokens
+
+	i = 0
+	for token in tokens:
+		print(token, i)
+		i+=1
+
+	parser_program()
+
+"""
+	output status information
+"""
 
 def print_tree(root, depth=0):	
 	for child in root.children:
-		print("depth {0}, child {1}".format(depth, child))
+		print("{0}{1}".format(depth*"\t", child.output()))
 		print_tree(child, depth + 1)
 
 def parser_output():
@@ -78,6 +111,10 @@ def print_error():
 	print("*** syntax error\n")
 	pass
 
+"""
+	move pivot point to scan token stream. 
+"""
+
 def set_pivot(index):
 	global pivot_index 
 	pivot_index = index
@@ -93,92 +130,93 @@ def get_pivot():
 	global pivot_index
 	return pivot_index
 
-def parser_add_token(word, line, l_type, offset):
-	#print("this is my first parser word=$0, line=$1, l_type=$2".format(word, line, l_type))
-	global tokens
-	tokens.append([word, line, l_type, offset])
-
-
-def parser_token():
-	global tokens
-
-	i = 0
-	for token in tokens:
-		print(token, i)
-		i+=1
-
-	parser_program()
-	parser_output()
+"""
+	start to scan token's stream, and build AST(Abstract Syntative tree).
+"""
 
 def parser_program():	
 	# check whether there still exists token
 	# there are have multiple declaration, like global variable declaration and function declaration.
-	cur_index = get_pivot() 
-	print("current index is {0}\n".format(cur_index))
-	
-	global root
-	root = TreeNode(None, {'value': 'program:'})
 
-		
+	# build AST tree, root node, and first node	
+	global root
+	root = new_node()
+	current = new_node()
+	update_node(current, root, "program")
+	
+	cur_index = 0	
 	while cur_index < len(tokens):
-		if parser_Decl(cur_index, root):
+		if Decl(cur_index, current):
 			cur_index = get_pivot() 
 			print("current index is {0}\n".format(cur_index))
 		else:
 			break
 	if cur_index >= len(tokens):
-		print("we succedd index is {0}\n".format(cur_index))
+		parser_output()
 	else:
 		print_error()
 		
-def parser_Decl(index, parent):
-	if VariableDecl(index):
-		add_node(parent, "VariableDecl")	
+def Decl(index, parent=None):
+	current = new_node()
+	if VariableDecl(index, current):
+		update_node(current, parent, "VariableDecl")
 		print("decl \n")
 		return True	
 	else:
 		set_pivot(index)
-		if FunctionDecl(index):
+		if FunctionDecl(index, current):
+			update_node(current, parent, "FunctionDecl")
 			return True
 	return False
 
-def VariableDecl(index):
-	if Variable(index) and term(index+2, ';'):
+def VariableDecl(index, parent=None):
+
+	if Variable(index, parent) and term(index+2, ';'):
 		print("variabledecl\n")
-		inc_pivot(1)	
+		inc_pivot(1)
 		return True
 	return False
 
-def Variable(index):
-	if Type(index) and identifier(index+1):
-		print("variable\n")
+def Variable(index, parent=None):
+	current = new_node()
+
+	if Type(index, current) and identifier(index+1, current):
 		inc_pivot(2)
+		update_node(current, parent, "Variable")
 		return True
 	parser_error(index)
 	return False
 
-def Type(index):
+def Type(index, parent=None):
+	current = new_node()
+
 	print("type index{0}".format(index))
 	if index < len(tokens) and tokens[index][2] in string_type:
+		update_node(current, parent, tokens[index][2])	
 		return True
 	print("type error")
 	return False
 
-def Type_void(index):
+def Type_void(index, parent=None):
+	current = new_node()
+
 	if index < len(tokens) and tokens[index][2] == "Void":
+		update_node(current, parent, "void")
 		return True
 	return False
 
-def FunctionDecl(index):
-	if (Type(index) or Type_void(index) ) and identifier(index+1) and term(index+2, '(') and Formals(index+3):	
+def FunctionDecl(index, parent=None):
+	current = parent
+
+	if (Type(index, current) or Type_void(index, current) ) and identifier(index+1, current) and term(index+2, '(') and Formals(index+3, current):	
 		index = get_pivot()
-		if term(index, ")") and StmtBlock(index+1):
+		if term(index, ")") and StmtBlock(index+1, current):
 			return True
 	set_pivot(index)	
 	return False	
 
-def Formals(index):
-	while Variable(index):
+def Formals(index, parent=None):
+	while Variable(index, parent):
 		if term(index+2, ','):
 			index += 3
 		else:
@@ -188,7 +226,9 @@ def Formals(index):
 	print("formal information {0}".format(index))
 	return True
 
-def StmtBlock(index):
+def StmtBlock(index, parent=None):
+	current = new_node()
+
 	if term(index, '{'):
 		inc_pivot()
 		index += 1
@@ -201,11 +241,11 @@ def StmtBlock(index):
 			Stmt Variable 
 		"""
 		while 1:
-			while VariableDecl(index):
+			while VariableDecl(index, current):
 				index += 3
 				flag = True
 	
-			while Stmt(index):
+			while Stmt(index, current):
 				index = get_pivot() 
 				flag = True
 			
@@ -216,32 +256,34 @@ def StmtBlock(index):
 		if term(index, '}'):
 			# pivot should be next token.
 			inc_pivot(1)
+			
+			update_node(current, parent, "StmtBlock")
 			return True
 	print("stmtBlock error")	
 	return False
 
-def Stmt(index):
+def Stmt(index, parent=None):
 	old_index = index	
-	if ReturnStmt(index):
+	if ReturnStmt(index, parent):
 		print("return statement is good, current{0}".format(get_pivot()))
 		return True
-	elif PrintStmt(index):
+	elif PrintStmt(index, parent):
 		return True	
-	elif StmtBlock(index):
+	elif StmtBlock(index, parent):
 		return True	
-	elif BreakStmt(index):
+	elif BreakStmt(index, parent):
 		return True	
-	elif ForStmt(index):
+	elif ForStmt(index, parent):
 		return True	
-	elif WhileStmt(index):
+	elif WhileStmt(index, parent):
 		return True
-	elif IfStmt(index):
+	elif IfStmt(index, parent):
 		return True
 	else:
 		pass
 
 	index = old_index	
-	if Expr(index):
+	if Expr(index, parent):
 		print("enter Expr {0}".format(tokens[index][0]))
 		index = get_pivot()
 		print("enter Expr {0} {1}".format(index, tokens[index][0]))
@@ -253,21 +295,25 @@ def Stmt(index):
 	print("stmt is error") 
 	return False 
 
-def ReturnStmt(index):
+def ReturnStmt(index, parent=None):
+	current = new_node()
+
 	if term(index, "return"):
 		index += 1
 		print("enter return")	
-		if Expr(index):
+		if Expr(index, parent):
 			index = get_pivot()
 			print("enter Expr return {0}".format(index))
 	if term(index, ';'):
 		set_pivot(index+1)
+		update_node(current, parent, "ReturnStmt")
 		return True
 	print("return is error, index {0}".format(index))
 	return False
 
-def PrintStmt(index):
-	print("enter print statememt--------")
+def PrintStmt(index, parent=None):
+	current = new_node()
+	
 	set_pivot(index)
 	old_index = index
 	
@@ -289,32 +335,41 @@ def PrintStmt(index):
 
 	if term(index, ')') and term(index+1, ";"):
 		inc_pivot(2)
+		update_node(current, parent,"PrintStmt")
 		return True
 	
 	set_pivot(old_index)
 	return False
 
-def BreakStmt(index):
+def BreakStmt(index, parent=None):
+	current = new_node()
+	
 	set_pivot(index)
 	if term(index, "break") and term(index+1, ";"):	
 		inc_pivot(2)
+		update_node(current, parent, "BreakStmt")
 		return True
 	return False
 
-def WhileStmt(index):
+def WhileStmt(index, parent=None):
+	current = new_node()
+	
 	set_pivot(index)
 	old_index = index
 
 	if term(index, "while") and term(index+1, "(") and  Expr(index+2):	
 		index = get_pivot()
 		if term(index, ")") and Stmt(index+1):
+			update_node(current, parent, "WhileStmt")				
 			return True
 
 	set_pivot(old_index)
 	print("while is error")
 	return False
 
-def IfStmt(index):
+def IfStmt(index, parent=None):
+	current = new_node()
+
 	old_index= index	
 	set_pivot(index)
 	if term(index, "if") and term(index+1, "(") and Expr(index+2):
@@ -323,12 +378,16 @@ def IfStmt(index):
 			index = get_pivot()
 			if term(index, "else") and Stmt(index+1):
 				index = get_pivot()
+			
+			update_node(current, parent, "IfStmt")	
 			return True
 
 	set_pivot(old_index)
 	return False
 
-def ForStmt(index):
+def ForStmt(index, parent=None):
+	current = new_node()
+
 	set_pivot(index)
 	old_index = index
 
@@ -342,36 +401,36 @@ def ForStmt(index):
 				if Expr(index+1):
 					index = get_pivot()
 					if term(index, ")") and Stmt(index+1):
+						update_node(current, parent, "ForStmt")	
 						return True
 		
 	set_pivot(old_index)
 	return False
 
 
-def Expr(index):
+def Expr(index, parent=None):
+	current = new_node()
+
 	old_index = index
 
-	if Call(index):
+	if Call(index, parent):
 		index = get_pivot()
-	elif Constant(index):
-		print("constant -----------cussess.{0}".format(index))
+	elif Constant(index, parent):
 		index += 1
-	elif term(index, "(") and Expr(index+1):
+	elif term(index, "(") and Expr(index+1, parent):
 		index = get_pivot()
 		if term(index, ")"):
 			index += 1
-	elif term(index, "!") and Expr(index+1):
+	elif term(index, "!") and Expr(index+1, parent):
 		index = get_pivot()
 	elif term(index, "ReadInteger") and term(index+1, "(") and term(index+2, ")"):
 		index += 3
 	elif term(index, "ReadLine") and term(index+1, "(") and term(index+2, ")"):
 		index += 3 	
-	elif LValue(index):
+	elif LValue(index, parent):
 		set_pivot(index+1)
 		LeftFactor(index+1)
-		print("lvvvvvvvvvvvvvvvv.{0}".format(index))
 		index = get_pivot()
-		print("lvvvvvvvvvvvvvvvv.{0}".format(index))
 		return True	
 	else:
 		print("Expr error {0} {1} {2}".format(old_index, index, get_pivot()))
@@ -382,7 +441,7 @@ def Expr(index):
 	print("Expr is success, index {0}, {1}".format(index, get_pivot()))
 	return True
 
-def LeftFactor(index):
+def LeftFactor(index, parent=None):
 	
 	if term(index, "=") and Expr(index+1):	
 		print("enter leftfactor term .{0}".format(get_pivot()))
@@ -393,7 +452,7 @@ def LeftFactor(index):
 	print("enter leftfactor0000000000000. index {0} {1}".format(index, tokens[index][0]))
 	return True		
 
-def Xprime(index):
+def Xprime(index, parent=None):
 	old_index = index
 	print("enter xPrimre {0} {1}".format(index, tokens[index][0]))
 	if is_single_operator(index) and Expr(index+1):	
@@ -406,12 +465,12 @@ def Xprime(index):
 	# set_pivot(old_index)
 	return True
 
-def LValue(index):
+def LValue(index, parent=None):
 	if identifier(index):
 		return True
 	return False
 
-def Call(index):
+def Call(index, parent=None):
 	print("call-------------")
 	old_index = index
 
@@ -424,7 +483,7 @@ def Call(index):
 	set_pivot(old_index)	
 	return False
 
-def Actuals(index):
+def Actuals(index, parent=None):
 	print("actuals--------------------")
 	old_index = index	
 	while Expr(index):
@@ -437,20 +496,25 @@ def Actuals(index):
 			break
 	return True
 
-def Constant(index):
+def Constant(index, parent=None):
+	current = new_node()
+
 	if index < len(tokens) and tokens[index][2] in CONSTANT_TYPE:
-		print("constant---------------------")
+		update_node(current, parent, "Constant")
 		return True 
 	return False
 
-def identifier(index):
+def identifier(index, parent=None):
+	current = new_node()
+
 	print("identifier {0}".format(index))
 	if index < len(tokens) and tokens[index][2] == "Identifier":
+		update_node(current, parent, "identifier")
 		return True
 	parser_error(index)	
 	return False
 
-def term(index, word): 
+def term(index, word, parent=None): 
 	if index < len(tokens) and tokens[index][0] == word:
 		return True
 	parser_error(index)
