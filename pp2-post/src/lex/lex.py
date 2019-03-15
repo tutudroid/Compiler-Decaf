@@ -12,6 +12,7 @@ from . import tokens
 from . import analysis_comment
 from . import analysis_define
 from . import parser
+from . import settings
 
 T_StringConstant = 1
 T_IntConstant = 2
@@ -146,10 +147,13 @@ def lexical_analysis_file(filename):
 
 	line_num = 0
 	is_multiple_comment = False
-	
-	for line in f.readlines():
-		line_num += 1
 
+	settings.init()	
+	for line in f.readlines():
+
+		settings.file_content.append(line)
+
+		line_num += 1
 
 		word = ""
 		pos = 0

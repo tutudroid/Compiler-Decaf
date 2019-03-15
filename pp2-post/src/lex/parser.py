@@ -24,7 +24,7 @@ Call 			::= ident ( Actuals )
 Actuals 		::= Expr+ , | E
 Constant 		::= intConstant | doubleConstant | boolConstant | stringConstant | null
 """
-
+import settings
 
 tokens = []
 pivot_index = 0
@@ -117,9 +117,10 @@ def parser_error(index):
 def print_error():
 	global farest_index
 	index = farest_index
-	print("\n*** Error line {0}.".format(tokens[index][1]))
-	print("{0}".format(tokens[index][0]))
-	print("{0}^".format(tokens[index][3]*' '))
+	line = tokens[index][1]
+	print("\n*** Error line {0}.".format(line))
+	length = len(tokens[index][0])
+	print("{2}{0}{1}".format((tokens[index][3]-length)*' ', length*'^', settings.file_content[line]))
 	print("*** syntax error\n")
 	pass
 
