@@ -469,20 +469,30 @@ def Expr(index, parent=None, callFunc=None):
 	tmp_node = new_node(parent)
 	if Call(index, current):
 		index = get_pivot()
+		set_pivot(index)
 	elif Constant(index, current):
 		index += 1
+		set_pivot(index)
 	elif term(index, "(") and Expr(index+1, current):
 		index = get_pivot()
 		if term(index, ")"):
 			index += 1
+		set_pivot(index)
 	elif term(index, "!", tmp_node) and Expr(index+1, tmp_node):
 		index = get_pivot()
 		update_node(tmp_node, parent, "LogicalExpr:", index)
 	elif term(index, "ReadInteger", parent) and term(index+1, "(") and term(index+2, ")"):
 		index += 3
+		set_pivot(index)
 	elif term(index, "ReadLine", parent) and term(index+1, "(") and term(index+2, ")"):
 		index += 3 	
+		set_pivot(index)
 	elif LValue(index, current):
+		if solve_multiple_add(index+1, current):
+			return True
+		if solve_logical(index+1, current):
+			return True
+	
 		set_pivot(index+1)
 		LeftFactor(index+1, current)
 		index = get_pivot()
@@ -490,9 +500,32 @@ def Expr(index, parent=None, callFunc=None):
 	else:
 		set_pivot(old_index)
 		return False
-	set_pivot(index)
+	
+	if solve_multiple_add(get_pivot(), current):
+		return True
+	if solve_logical(get_pivot(), current):
+		return True
 	Xprime(index, parent)	
 	return True
+
+RELATION_TOKEN = ["<=", ">=", ">", "<", "=="]
+LOGICAL_TOKEN = ["&&", "||"]
+def solve_logical(index, current):
+	if len(current.children)>1 and current.children[1].des in RELATION_TOKEN: 
+		parent = current.parent
+		Xprime(index, parent)
+		return True
+	return False
+
+ADD_MINUS = ["+", "-"]
+MUTIPLE_DIVID = ["*", "/"]
+def solve_multiple_add(index, current):
+	if tokens[index][0] in ADD_MINUS and len(current.parent.children)>1 and current.parent.children[1].des in ADD_MINUS and len(current.children)>1 and current.children[1].des in MUTIPLE_DIVID:
+		parent = current.parent
+		
+		Xprime(index, parent)
+		return True
+	return False
 
 def new_child_tree(parent=None):
 	# create new node
@@ -501,6 +534,7 @@ def new_child_tree(parent=None):
 		# add last token to new node	
 		first_node = parent.children[-1]
 		update_node(first_node, temp_node)
+		
 	return temp_node
 
 def update_child_tree(child, parent=None, value=None, index=None):
@@ -511,16 +545,18 @@ def update_child_tree(child, parent=None, value=None, index=None):
 def LeftFactor(index, parent=None):
 	current = parent 
 
-	# create new node
-	temp_node = new_child_tree(parent)	
-
-	if term(index, "=", temp_node) and Expr(index+1, temp_node):	
-		# need to update index
-		index = get_pivot()	
-		
+	if index < len(tokens) and tokens[index][0] == "=":
+		# create new node
+		temp_node = new_child_tree(parent)	
+	
 		# delete parent last token, add new child tree to parent
 		update_child_tree(temp_node, parent, "AssignExpr:", index)
-		
+	
+		if term(index, "=", temp_node) and Expr(index+1, temp_node):	
+			# need to update index
+			index = get_pivot()	
+		return True
+	
 	Xprime(index, parent)
 	return True		
 
@@ -528,23 +564,32 @@ def Xprime(index, parent=None):
 	old_index = index
 	# this is a trick
 	current = new_child_tree(parent)
-	if is_single_operator(index, current) and Expr(index+1, current):
+	if is_single_operator(index, current):
 		string = "ArithmeticExpr:"
 		if tokens[old_index][0] not in '+-*%/':
 			string = "RelationalExpr:"
 		update_child_tree(current, parent, string, index)	
-		return True
+
+		if Expr(index+1, current):
+			
+			#string = "ArithmeticExpr:"
+			#if tokens[old_index][0] not in '+-*%/':
+		#		string = "RelationalExpr:"
+		#	update_child_tree(current, parent, string, index)	
+			return True
 
 	index = old_index
 	current = new_child_tree(parent)
-	if is_double_operator(index, current) and Expr(index+1, current):
+	if is_double_operator(index, current):
 		string = "LogicalExpr:"
 		if tokens[old_index][0] == "==":
 			string = "EqualityExpr:"	
 		elif tokens[old_index][0] == "<=" or tokens[old_index][0] == ">=":
 			string = "RelationalExpr:"		
 		update_child_tree(current, parent, string, index)	
-		return True 
+		
+		if Expr(index+1, current):
+			return True 
 
 	# set_pivot(old_index)
 	return True
@@ -625,6 +670,7 @@ def is_single_operator(index, parent=None):
 	current = new_node(parent)
 
 	if index < len(tokens) and tokens[index][0] in "+-*/%<>!":
+		current.des = tokens[index][0]
 		update_node(current, parent, "Operator: {0}".format(tokens[index][0]), index)
 		return True
 	parser_error(index)	
@@ -634,8 +680,8 @@ DOUBLE_OPERATOR = ["==", "<=", ">=", "!=", "||", "&&"]
 
 def is_double_operator(index, parent=None):
 	current = new_node(parent)
-
 	if index < len(tokens) and tokens[index][0] in DOUBLE_OPERATOR:
+		current.des = tokens[index][0]
 		update_node(current, parent, "Operator: {0}".format(tokens[index][0]), index)
 		return True	
 	parser_error(index)
