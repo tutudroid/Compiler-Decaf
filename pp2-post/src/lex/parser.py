@@ -43,7 +43,7 @@ farest_index = 0
 root = None
 
 class TreeNode(object):
-	def __init__(self, parent, value):
+	def __init__(self, parent, value=""):
 		self.parent = parent
 		self.children = []
 		self.value = value
@@ -62,10 +62,10 @@ class TreeNode(object):
 		return self.parent
 	
 	def output(self, depth):
-		line = " "	
-		if self.index != None:
+		if isinstance(self.index, int):
 			line = tokens[self.index][1]
-
+		else:
+			line = self.index
 		return"{0}{1}{2}".format(line, depth*"   ", self.value, self.index)
 			
 def new_node(parent=None, value=None):
@@ -88,11 +88,6 @@ def parser_add_token(word, line, l_type, offset):
 def parser_token():
 	global tokens
 
-	i = 0
-	for token in tokens:
-		print(token, i)
-		i+=1
-
 	parser_program()
 
 """
@@ -105,8 +100,8 @@ def print_tree(root, depth=0):
 		print_tree(child, depth + 1)
 
 def parser_output(current=None):
-	print("this is our tree")
 	global root
+	print("")
 	if current:
 		print_tree(current)
 	else:
@@ -159,13 +154,12 @@ def parser_program():
 	global root
 	root = new_node()
 	current = new_node(root)
-	update_node(current, root, "program:")
+	update_node(current, root, "Program:", " ")
 	
 	cur_index = 0	
 	while cur_index < len(tokens):
 		if Decl(cur_index, current):
 			cur_index = get_pivot() 
-			print("current index is {0}\n".format(cur_index))
 		else:
 			break
 	if cur_index >= len(tokens):
@@ -184,10 +178,10 @@ def Decl(index, parent=None):
 
 def VariableDecl(index, parent=None):
 	current = new_node(parent)
-
+	
 	if Variable(index, current, "VariableDecl") and term(index+2, ';'):
 		inc_pivot(1)
-		update_node(current, parent, "VarDecl:", index)
+		update_node(current, parent, "VarDecl:", index+1)
 		return True
 	return False
 
@@ -211,10 +205,10 @@ def Type(index, parent=None, callFunc=None):
 	string = ""
 	if callFunc == "FunctionDecl":
 		string = "(return type) "
-	string += "Type: {0}".format(tokens[index][2])
+	string += "Type: {0}".format(tokens[index][2].lower())
 
 	if index < len(tokens) and tokens[index][2] in string_type:
-		update_node(current, parent, string.lower())	
+		update_node(current, parent, string, len(str(index))*" ")	
 		return True
 	return False
 
@@ -222,7 +216,7 @@ def Type_void(index, parent=None):
 	current = new_node(parent)
 
 	if index < len(tokens) and tokens[index][2] == "Void":
-		update_node(current, parent, "(return type) Type: void")
+		update_node(current, parent, "(return type) Type: void", len(str(index))*" ")
 		return True
 	return False
 
@@ -245,7 +239,6 @@ def Formals(index, parent=None):
 			index += 2
 			break
 	set_pivot(index)
-	print("formal information {0}".format(index))
 	return True
 
 def StmtBlock(index, parent=None):
@@ -279,15 +272,13 @@ def StmtBlock(index, parent=None):
 			# pivot should be next token.
 			inc_pivot(1)
 			
-			update_node(current, parent, "(body) StmtBlock:")
+			update_node(current, parent, "(body) StmtBlock:", len(str(index))*" ")
 			return True
-	print("stmtBlock error")	
 	return False
 
 def Stmt(index, parent=None):
 	old_index = index	
 	if ReturnStmt(index, parent):
-		print("return statement is good, current{0}".format(get_pivot()))
 		return True
 	elif PrintStmt(index, parent):
 		return True	
@@ -306,15 +297,12 @@ def Stmt(index, parent=None):
 
 	index = old_index	
 	if Expr(index, parent):
-		print("enter Expr {0}".format(tokens[index][0]))
 		index = get_pivot()
-		print("enter Expr {0} {1}".format(index, tokens[index][0]))
 		
 	if term(index, ";"):
 		inc_pivot()
 		return True
 	set_pivot(old_index)
-	print("stmt is error") 
 	return False 
 
 def ReturnStmt(index, parent=None):
@@ -322,18 +310,15 @@ def ReturnStmt(index, parent=None):
 
 	if term(index, "return"):
 		index += 1
-		print("enter return")	
 		if Expr(index, current):
 			index = get_pivot()
-			print("enter Expr return {0}".format(index))
 		else:
 			empty = new_node(parent)
-			update_node(empty, current, "Empty:")
+			update_node(empty, current, "Empty:", len(str(index))*" ")
 	if term(index, ';'):
 		set_pivot(index+1)
-		update_node(current, parent, "ReturnStmt")
+		update_node(current, parent, "ReturnStmt:", index)
 		return True
-	print("return is error, index {0}".format(index))
 	return False
 
 def PrintStmt(index, parent=None):
@@ -345,13 +330,10 @@ def PrintStmt(index, parent=None):
 	if term(index, "Print") and term(index+1, "("):
 		inc_pivot(2)
 		index += 2
-		print("enter print statememt3--------{0}".format(index))
 			
 		while Expr(index, current):
-			print("enter print statememt--------{0}".format(index))
 			
 			index = get_pivot()
-			print("enter print statememt2--------{0}".format(index))
 			
 			if term(index, ","):
 				index += 1
@@ -360,7 +342,8 @@ def PrintStmt(index, parent=None):
 
 	if term(index, ')') and term(index+1, ";"):
 		inc_pivot(2)
-		update_node(current, parent,"PrintStmt")
+		update_node(current, parent,"PrintStmt:", len(str(index))*" ")
+		add_pre_info_node(current, "(args) ")
 		return True
 	
 	set_pivot(old_index)
@@ -372,7 +355,7 @@ def BreakStmt(index, parent=None):
 	set_pivot(index)
 	if term(index, "break") and term(index+1, ";"):	
 		inc_pivot(2)
-		update_node(current, parent, "BreakStmt")
+		update_node(current, parent, "BreakStmt:", index)
 		return True
 	return False
 
@@ -383,21 +366,25 @@ def WhileStmt(index, parent=None):
 	old_index = index
 
 	if term(index, "while") and term(index+1, "("):
-		while_test = new_node(parent)
 
-		if Expr(index+2, while_test):	
+		if Expr(index+2, current):	
 			index = get_pivot()
-			update_node(while_test, current, "(test) RelationalExpr:")
 		else:
-			update_node(while_test, current, "(test) Empty")	
+			while_test = new_node(parent)
+			update_node(while_test, current, "Empty", index)	
+		add_stmt_pre_node(current, "(test) ")	
 
 		if term(index, ")") and Stmt(index+1, current):
-			update_node(current, parent, "WhileStmt")				
+			update_node(current, parent, "WhileStmt:", len(str(index))*" ")				
 			return True
 
 	set_pivot(old_index)
-	print("while is error")
 	return False
+
+
+def add_stmt_pre_node(current, value):
+	if current and current.children and len(current.children)>0:
+		current.children[-1].value = value + current.children[-1].value
 
 def IfStmt(index, parent=None):
 	current = new_node(parent)
@@ -406,24 +393,23 @@ def IfStmt(index, parent=None):
 	set_pivot(index)
 	if term(index, "if") and term(index+1, "("):
 
-		if_test = new_node(parent)
-		if Expr(index+2, if_test):
+		if Expr(index+2, current):
 			index = get_pivot()
-			update_node(if_test, current, "(test) EqualityExpr:")
 		
 			if term(index, ")"):
-				
-				if_then = new_node(parent)
-				if Stmt(index+1, if_then):
+								
+				add_stmt_pre_node(current, "(test) ")
+				if Stmt(index+1, current):
 					index = get_pivot()
-					update_node(if_then, current, "(then) BreakStmt:")
-
+					
+					add_stmt_pre_node(current, "(then) ")
+					
 					if term(index, "else"):
-						if_else = new_node(parent)
-						if Stmt(index+1, if_else):
+						if Stmt(index+1, current):
 							index = get_pivot()
-							update_node(if_else, current, "(else) AssignExpr")	
-					update_node(current, parent, "IfStmt")	
+							add_stmt_pre_node(current, "(else) ")
+							
+					update_node(current, parent, "IfStmt:", len(str(index))*" ")	
 					return True
 
 	set_pivot(old_index)
@@ -438,12 +424,12 @@ def ForStmt(index, parent=None):
 	if term(index, "for") and term(index+1, "("):
 		index += 2
 
-		for_init = new_node(parent)
-		if Expr(index, for_init):
+		if Expr(index, current):
 			index = get_pivot()
-			update_node(for_init, current, "(init) AssignExpr:")
 		else:
-			update_node(for_init, current, "(init) Empty:")
+			tmp_node = new_node(current)
+			update_node(tmp_node, current, "Empty: ", len(str(index))*" ")
+		add_stmt_pre_node(current, "(init) ")
 
 		if term(index, ";"):
 			pass
@@ -451,12 +437,10 @@ def ForStmt(index, parent=None):
 			set_pivot(old_index)
 			return False
 		
-		for_test = new_node(parent)
-		if Expr(index+1, for_test):
+		if Expr(index+1, current):
 			index = get_pivot()
-			update_node(for_test, current, "(test) LogicalExpr:")
-		else:
-			update_node(for_test, current, "(test) Empty:")
+
+		add_stmt_pre_node(current, "(test) ")
 
 		if term(index, ";"):
 			pass
@@ -464,14 +448,12 @@ def ForStmt(index, parent=None):
 			set_pivot(old_index)
 			return False
 	
-		for_step = new_node(parent)
-		if Expr(index+1, for_step):
+		if Expr(index+1, current):
 			index = get_pivot()
-			update_node(for_step, current, "(step) AssignExpr:")
-		else:
-			update_node(for_step, current, "(step) empty")
+		add_stmt_pre_node(current, "(step) ")
+	
 		if term(index, ")") and Stmt(index+1, current):
-			update_node(current, parent, "ForStmt")	
+			update_node(current, parent, "ForStmt:", len(str(index))*" ")	
 			return True
 
 	set_pivot(old_index)
@@ -505,12 +487,10 @@ def Expr(index, parent=None, callFunc=None):
 		index = get_pivot()
 		return True	
 	else:
-		print("Expr error {0} {1} {2}".format(old_index, index, get_pivot()))
 		set_pivot(old_index)
 		return False
 	set_pivot(index)
 	Xprime(index, parent)	
-	print("Expr is success, index {0}, {1}".format(index, get_pivot()))
 	return True
 
 def new_child_tree(parent=None):
@@ -538,7 +518,7 @@ def LeftFactor(index, parent=None):
 		index = get_pivot()	
 		
 		# delete parent last token, add new child tree to parent
-		update_child_tree(temp_node, parent, "AssignExpr:")
+		update_child_tree(temp_node, parent, "AssignExpr:", index)
 		
 	Xprime(index, parent)
 	return True		
@@ -572,7 +552,7 @@ def LValue(index, parent=None):
 	current = new_node(parent)
 
 	if identifier(index, current):
-		update_node(current, parent, "FieldAccess", index)
+		update_node(current, parent, "FieldAccess:", index)
 		return True
 	return False
 
@@ -623,7 +603,6 @@ def Constant(index, parent=None):
 def identifier(index, parent=None):
 	current = new_node(parent)
 
-	print("identifier {0}".format(index))
 	if index < len(tokens) and tokens[index][2] == "Identifier":
 		update_node(current, parent, "Identifier: {0}".format(tokens[index][0]), index)
 		return True
