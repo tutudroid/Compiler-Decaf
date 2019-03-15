@@ -655,7 +655,10 @@ def Constant(index, parent=None):
 	current = new_node(parent)
 
 	if index < len(tokens) and tokens[index][2] in CONSTANT_TYPE:
-		update_node(current, parent, "{0}: {1}".format(tokens[index][2], tokens[index][0]), index)
+		if tokens[index][2] == "DoubleConstant" and float(tokens[index][0]) == int(float(tokens[index][0])):
+			update_node(current, parent, "{0}: {1}".format(tokens[index][2], int(float(tokens[index][0]))), index)
+		else:	
+			update_node(current, parent, "{0}: {1}".format(tokens[index][2], tokens[index][0]), index)
 		return True 
 	return False
 
