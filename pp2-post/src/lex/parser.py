@@ -15,15 +15,21 @@ ForStmt 		::= for ( <Expr>; Expr ; <Expr>) Stmt
 ReturnStmt 		::= return < Expr > ;
 BreakStmt 		::= break ;
 PrintStmt 		::= Print ( Expr+ , ) ; 
-Expr 			::=	LValue=Expr|Constant|LValue|this|Call|(Expr)| Expr + Expr | Expr - Expr | Expr * Expr 
-					| Expr / Expr | Expr % Expr | - Expr | Expr < Expr | Expr <= Expr | Expr > Expr |
-					 Expr >= Expr | Expr == Expr | Expr ! = Expr | Expr&&Expr|Expr||Expr|! Expr|ReadInteger()| 
-					ReadLine ( )
+
+Expr 			::=	LValue YLeftfactor | Constant Xprime | this Xprime | Call Xprime |(Expr) Xprime 
+					 - Expr Xprime | ! Expr Xprime | ReadInteger() Xprime | ReadLine ( ) Xprime 
+
+YLeftFactor ::= =Expr Xprime | Xprime
+
+Xprime = + Expr Xprime | - Expr Xprime | * Expr Xprime | / Expr Xprime | % Expr Xprime | < Expr Xprime | <= Expr Xprime |
+		  > Expr Xprime | >= Expr Xprime | == Expr Xprime |  ! = Expr Xprime | && Expr Xprime | || Expr Xprime | Epslon
+ 
 LValue			::= ident
 Call 			::= ident ( Actuals )
-Actuals 		::= Expr+ , | E
+Actuals 		::= Expr+ , | Epslon
 Constant 		::= intConstant | doubleConstant | boolConstant | stringConstant | null
 """
+
 import settings
 
 tokens = []
