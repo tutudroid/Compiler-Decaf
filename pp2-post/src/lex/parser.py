@@ -622,21 +622,6 @@ def Ele(index, parent=None):
 	PRINT("Ele {0} {1}".format(get_pivot(), tokens[index][0]))	
 	return True
 
-def new_child_tree(parent=None):
-	# create new node
-	temp_node = new_node(parent)
-	if len(parent.children) > 0:
-		# add last token to new node	
-		first_node = parent.children[-1]
-		update_node(first_node, temp_node)
-		
-	return temp_node
-
-def update_child_tree(child, parent=None, value=None, index=None):
-	if len(parent.children) > 0:
-		del parent.children[-1]
-	update_node(child, parent, value, index)
-	
 def LValue(index, parent=None):
 	current = new_node(parent)
 
