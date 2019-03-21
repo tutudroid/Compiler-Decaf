@@ -39,8 +39,8 @@ pivot_index = 0
 string_type = ["Int", "Double", "Bool", "String", ]
 
 CONSTANT_TYPE = ["IntConstant", "DoubleConstant", "BoolConstant", "StringConstant", "NULL"]
-# record the farest token when we meet error
-farest_index = 0
+# record the farthest token when we meet error
+farthest_index = 0
 
 """
 	AST node 
@@ -120,16 +120,16 @@ def parser_output(current=None):
 	else:
 		print_tree(root)
 
-# record the farest token
+# record the farthest token
 def parser_error(index):
-	global farest_index
-	if farest_index < index:
-		farest_index = index
+	global farthest_index
+	if farthest_index < index:
+		farthest_index = index
 
 # print the error message
 def print_error():
-	global farest_index
-	index = farest_index
+	global farthest_index
+	index = farthest_index
 	line = tokens[index][1]
 	print("\n*** Error line {0}.".format(line))
 	length = len(tokens[index][0])
@@ -582,7 +582,7 @@ def Factor(index, parent=None):
 	old_index = index	
 	
 	current = new_node(parent, "LogicalExpr", index)
-	if ( term(index, '!', current) or term(index, '--', current)) and Ele(index+1, current):
+	if ( term(index, '!', current) or (term(index, '-', current) and term(index-1, '=', None))) and Ele(index+1, current):
 		update_node(current, parent)
 
 		PRINT("Factor {0} {1}".format(get_pivot(), tokens[get_pivot()][0]))	
