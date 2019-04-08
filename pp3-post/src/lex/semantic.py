@@ -49,7 +49,7 @@ EXPRESSION = ["EqualityExpr", "ArithmeticExpr", "AssignExpr", "LogicalExpr", "Re
 
 BOOL_EXPRESSION = ["EqualityExpr", "LogicalExpr", "RelationalExpr"] 
 
-def print_error(root, tokens, sentence, length=0):
+def print_error(root, tokens, sentence, whole_node=0):
 	index = root.get_index()
 	line = 0
 	if isinstance(index, int):
@@ -58,11 +58,22 @@ def print_error(root, tokens, sentence, length=0):
 		print("line is ", index, sentence, root.get_name(), root.get_value())
 		return
 	length = len(tokens[index][0])
-	#print(tokens[root.children[-1].get_index()], tokens[root.children[0].get_index()])
-	#length = tokens[root.children[-1].get_index()][3]# - tokens[root.get_children(0).get_index()][3]
+	space = tokens[index][3] - length
+
+	# get the length of all node
+	if whole_node:
+		leftest = root.get_leftest_child();
+		rightest = root.get_rightest_child();
+		length = tokens[rightest.get_index()][3] - tokens[leftest.get_index()][3] + len(tokens[rightest.get_index()][0])
+		space = tokens[leftest.get_index()][3] - len(tokens[leftest.get_index()][0])
+		if root.get_name() in ["Call", "PrintStmt",]:
+			length += 1
+	if root.get_name() in ["ReadLineExpr", "ReadIntegerExpr"]:
+		length += 2
 	print("\n*** Error line {0}.".format(line))
-	print("{2}{0}{1}".format((tokens[index][3]-length)*' ', length*'^', settings.file_content[line]    ))
+	print("{2}{0}{1}".format(space*' ', length*'^', settings.file_content[line]    ))
 	print("{0}\n".format(sentence))
+
 	
 def build_parameter(root):
 	ret = []
@@ -208,7 +219,7 @@ def parameter_checking(root, tokens):
 					child_type = root.get_children(1+i).get_sematicType()
 					if child_type != function_info[3+i]:
 						error = "*** Incompatible argument {0}: {1} given, {2} expected".format(i+1, child_type, function_info[3+i])
-						print_error(root.get_children(1+i), tokens, error)
+						print_error(root.get_children(1+i), tokens, error, True)
 	pass
 
 def printstmt_checking(root, tokens):
@@ -218,7 +229,7 @@ def printstmt_checking(root, tokens):
 			child_type = child.get_sematicType()
 			if child_type not in ["int", "bool", "string"]:
 				error = "*** Incompatible argument {0}: {1} given, int/bool/string expected".format(i+1, child_type)
-				print_error(child, tokens, error)
+				print_error(child, tokens, error, True)
 			i += 1
 	pass
 
@@ -227,7 +238,7 @@ def ifstmt_checking(root, tokens):
 		child = root.get_children(0)
 		if child.get_sematicType() != "bool":
 			error = "*** Test expression must have boolean type"
-			print_error(child, tokens, error)
+			print_error(child, tokens, error, True)
 		pass	 
 	pass
 
@@ -236,7 +247,7 @@ def forstmt_checking(root, tokens):
 		child = root.get_children(1)
 		if child.get_sematicType() != "bool":
 			error = "*** Test expression must have boolean type"
-			print_error(child, tokens, error)
+			print_error(child, tokens, error, True)
 		pass
 	pass
 
@@ -245,7 +256,7 @@ def whilestmt_checking(root, tokens):
 		child = root.get_children(0)
 		if child.get_sematicType() != "bool":
 			error = "*** Test expression must have boolean type"
-			print_error(child, tokens, error)
+			print_error(child, tokens, error, True)
 		pass
 	pass
 

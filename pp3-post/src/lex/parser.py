@@ -164,6 +164,18 @@ class TreeNode(object):
 		return self.index
 	def get_parent(self):
 		return self.parent
+
+	def get_leftest_child(self):
+		left_child = self
+		while(len(left_child.children)>0):
+			left_child = left_child.children[0]	
+		return left_child
+
+	def get_rightest_child(self):
+		right_child = self
+		while(len(right_child.children)>0):
+			right_child = right_child.children[-1]	
+		return right_child
 	
 def new_node(parent=None, value=None, index=0):
 	current = TreeNode(parent, value, index)
