@@ -48,14 +48,25 @@ CONSTANT_TYPE = ["IntConstant", "DoubleConstant", "BoolConstant", "StringConstan
 EXPRESSION = ["ArithmeticExpr", "AssignExpr", "LogicalExpr", "RelationalExpr"]
 
 
-def print_error(index, tokens, sentence):
+def print_error(root, tokens, sentence, length=0):
+	index = root.get_index()
 	line = tokens[index][1]
 	length = len(tokens[index][0])
-		
+	if len(root.children) > 1: 
+		print(tokens[root.children[-1].get_index()], tokens[root.children[0].get_index()])
+		#length = tokens[root.children[-1].get_index()][3]# - tokens[root.get_children(0).get_index()][3]
 	print("\n*** Error line {0}.".format(line))
 	print("{2}{0}{1}".format((tokens[index][3]-length)*' ', length*'^', settings.file_content[line]    ))
 	print("{0}\n".format(sentence))
-		
+	
+def build_parameter(root):
+	ret = []
+	length = 0
+	for child in root.children:	
+		if child.get_name() == "VarDecl":
+			length += 1
+			ret.append(child.get_children(0).get_value())
+	return [length] + ret			
 
 def build_idSymbol(root):
 	global_variable = {}
@@ -66,16 +77,17 @@ def build_idSymbol(root):
 			if child.get_name() == "VarDecl":
 		 		global_variable[node_identifier] = [node_type, "Var"]
 			else:
-		 		global_variable[node_identifier] = [node_type, "Func"]	
+		 		global_variable[node_identifier] = [node_type, "Func"]
+				global_variable[node_identifier] += build_parameter(child)	
 	return global_variable
 
 def find_idSymbol(variable, is_func=False):
 	for item in idSymbol[::-1]:
 		if variable in item.keys():
 			if is_func and item[variable][1] == "Func":
-				return item[variable][0]
+				return item[variable]
 			elif is_func== False and item[variable][1] == "Var":
-				return item[variable][0]
+				return item[variable]
 	return None 
 
 
@@ -97,9 +109,7 @@ def checking(root, tokens=None):
 		scope_checking()
 		if_checking()
 		while_checking()
-		parameter_checking()
-		return_checking()
-	
+		
 		checking(child, tokens)		
 
 		# set expression type	
@@ -109,13 +119,16 @@ def checking(root, tokens=None):
 			elif i is 2 and current_type != child.get_sematicType():
 				if current_type != "error" and child.get_sematicType() != "error":
 					error = "*** incompatible operands: {0} {1} {2}".format(current_type, root.get_children(1).get_value(), child.get_sematicType())
-					print_error(root.get_index(), tokens, error)
+					print_error(root, tokens, error)
 					current_type = "error"
 
 		if root.get_name() in ["FieldAccess"]:
 			current_type = child.get_sematicType()
 		if root.get_name() == "LogicalExpr" and root.get_children(0).get_value() == "-":
 			current_type = root.get_children(1).get_sematicType()
+		# function call parameter check	
+		parameter_checking(child, tokens)	
+		printstmt_checking(child, tokens)		
 		# delete local varibal	
 		del idSymbol[-1]
 		i += 1
@@ -124,14 +137,20 @@ def checking(root, tokens=None):
 	if current_type == None:
 		if root.get_name() == "Identifier":
 			variable = root.get_value()
-			if root.parent.get_name() == "FnDecl":
-				current_type = find_idSymbol(variable, True)
+			if root.parent.get_name() in ["Call", "FnDecl"]:
+				current = find_idSymbol(variable, True)
 			else:
-				current_type = find_idSymbol(variable)
-			if current_type == None:
-				error = "No declaration for variable \'{0}\' found".format(variable)
-				print_error(root.get_index(), tokens, error)
+				current = find_idSymbol(variable)
+			if current == None:
+				if root.parent.get_name() in ["FnDecl", "Call"]:
+					error = "No declaration for Function \'{0}\' found".format(variable)
+				else:
+					error = "No declaration for Variable \'{0}\' found".format(variable)	
+				print_error(root, tokens, error)
 				current_type = "error"
+			else:
+				current_type = current[0]
+
 		if root.get_name() in CONSTANT_TYPE:
 			current_type = root.get_name().split("Constant")[0].lower()
 		if root.get_name() == "Call":
@@ -156,8 +175,34 @@ def if_checking():
 def while_checking():
 	pass
 
-def parameter_checking():
+def parameter_checking(root, tokens):
+	if root.get_name() == "Call":
+		child = root.get_children(0)
+		function_name = child.get_value()
+		function_info = find_idSymbol(function_name, True)	
+		if len(function_info) > 0:
+			if len(root.children) - 1 < function_info[2]:
+				error = "Funtion '{0}' expects {1} arguments but {2} given".format(child.get_name(), function_info[2], len(root.children)-1)	
+				print_error(child, tokens, error)
+			else:
+				for i in range(function_info[2]):
+					child_type = root.get_children(1+i).get_sematicType()
+					if child_type != function_info[3+i]:
+						error = "Incompatible argument {0}: {1} given, {2} expected".format(i+1, child_type, function_info[3+i])
+						print_error(root.get_children(1+i), tokens, error)
 	pass
+
+def printstmt_checking(root, tokens):
+	if root.get_name() == "PrintStmt":
+		i = 0
+		for child in root.children:
+			child_type = child.get_sematicType()
+			if child_type not in ["int", "bool", "string"]:
+				error = "Incompatible argument {0}: {1} given, int/bool/string expected".format(i+1, child_type)
+				print_error(child, tokens, error)
+			i += 1
+	pass
+
 
 def return_checking():
 	pass

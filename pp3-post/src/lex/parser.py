@@ -139,7 +139,7 @@ class TreeNode(object):
 		return self.semanticType
 	
 	def get_children(self, index):
-		if index >= 0 and index < len(self.children):
+		if index < len(self.children):
 			return self.children[index]
 		print("Parameter error")
 		return None
