@@ -33,7 +33,6 @@ Constant 		::= intConstant | doubleConstant | boolConstant | stringConstant | nu
 
 import settings
 
-from . import sematic
 
 tokens = []
 pivot_index = 0
@@ -50,6 +49,24 @@ farthest_index = 0
 
 # AST root node
 root = None
+
+"""
+store token stream, and start parser program.
+"""
+def parser_add_token(word, line, l_type, offset):
+	global tokens
+	tokens.append([word, line, l_type, offset])
+
+def parser_token():
+	global tokens
+
+	parser_program()
+
+def parser_output(current=None):
+	if current:
+		#print("")
+		#print_tree(current)
+		pass
 
 
 NO_PRINT_LINE = ["Type", "IfStmt", "PrintStmt",  "(return type) Type", "(body) StmtBlock"]
@@ -112,7 +129,7 @@ class TreeNode(object):
 			elif self == self.parent.get_children(2):
 				value = "(step) " + self.value
 		
-		return"{0}{1}{2}: {3} {4}".format(line, depth*"   ", value, self.des, self.semanticType)
+		return"{0}{1}{2}: {3} ".format(line, depth*"   ", value, self.des, self.semanticType)
 
 	def get_name(self):
 		return self.value
@@ -145,6 +162,8 @@ class TreeNode(object):
 		return None
 	def get_index(self):
 		return self.index
+	def get_parent(self):
+		return self.parent
 	
 def new_node(parent=None, value=None, index=0):
 	current = TreeNode(parent, value, index)
@@ -155,17 +174,6 @@ def update_node(current, parent, value=None, index=None):
 		current.update(value, index, parent)
 		parent.children.append(current)
 		
-"""
-store token stream, and start parser program.
-"""
-def parser_add_token(word, line, l_type, offset):
-	global tokens
-	tokens.append([word, line, l_type, offset])
-
-def parser_token():
-	global tokens
-
-	parser_program()
 
 """
 	output status information
@@ -177,15 +185,7 @@ def print_tree(root, depth=0):
 		print(child.output(depth))
 		print_tree(child, depth + 1)
 
-def parser_output(current=None):
-	print("")
-	if current:
-		print_tree(current)
-		pass
-	# start sematic analysis
-	sematic.start(root.children[0], tokens)
-	print_tree(root)
-	
+
 # record the farthest token
 def parser_error(index):
 	global farthest_index
@@ -753,6 +753,8 @@ def identifier(index, parent=None):
 def term(index, word, parent=None):
  	if tokens[index][0] == "ReadInteger":
 		current = new_node(parent, "ReadIntegerExpr",index)
+	elif tokens[index][0] == "ReadLine":
+		current = new_node(parent, "ReadLineExpr", index)
 	else:
 		current = new_node(parent, "Operator", index)
 		current.des = tokens[index][0]
