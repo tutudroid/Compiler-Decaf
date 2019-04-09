@@ -32,7 +32,7 @@ Constant 		::= intConstant | doubleConstant | boolConstant | stringConstant | nu
 """
 
 import settings
-
+from treeNode import TreeNode
 
 tokens = []
 pivot_index = 0
@@ -71,6 +71,7 @@ def parser_output(current=None):
 
 NO_PRINT_LINE = ["Type", "IfStmt", "PrintStmt",  "(return type) Type", "(body) StmtBlock"]
 
+"""
 class TreeNode(object):
 	def __init__(self, parent, value="", index = 0):
 		self.parent = parent
@@ -176,6 +177,7 @@ class TreeNode(object):
 		while(len(right_child.children)>0):
 			right_child = right_child.children[-1]	
 		return right_child
+"""
 	
 def new_node(parent=None, value=None, index=0):
 	current = TreeNode(parent, value, index)
@@ -194,7 +196,7 @@ def update_node(current, parent, value=None, index=None):
 def print_tree(root, depth=0):	
 	for child in root.children:
 		child.parent = root
-		print(child.output(depth))
+		print(child.output(depth, tokens))
 		print_tree(child, depth + 1)
 
 
