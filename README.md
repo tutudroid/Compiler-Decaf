@@ -1,6 +1,6 @@
 # Compiler-Decaf
 
-This is the project for compiler in 2019 spring.
+This is the project for completing a simple language, called decaf, for compiler in 2019 spring.
 
 part 1 for completing lexical analysis.
 
