@@ -1,16 +1,22 @@
-int a;
 
 
-int tester(int d) {
-  return (a + d);
+int foo(int a, double b, bool c) {
+  return a + 2;
 }
 
 void main() {
+  int b;
   int a;
-  int c;
-
-  a = 3;
-
-  c = a + b;
-  Print(tester(c));
+  double d;
+	
+ a<b >=c;
+	
+  d = -a+b; 
+  d = 2 + 3 * 4 - (6 / 2) + 5%3;
+  b = ReadInteger();
+  a = b + 2;;;;
+  Print(a, b, d);
+  foo(a + 2, d/2, a == b && d >= 1.0 || e != a );
 }
+
+

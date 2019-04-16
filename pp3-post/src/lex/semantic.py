@@ -84,12 +84,16 @@ def build_parameter(root):
 			ret.append(child.get_children(0).get_value())
 	return [length] + ret			
 
-def build_idSymbol(root):
+def build_idSymbol(root, tokens):
 	global_variable = {}
 	for child in root.children:
 		if child.get_name() == "VarDecl" or child.get_name() == "FnDecl":
 			node_identifier = child.get_identifier()
 			node_type = child.get_nodeType()
+			
+			if node_identifier in global_variable:
+ 				error_msg = "*** Duplicate declaration of variable/function '{0}'".format(node_identifier)
+ 				print_error(child, tokens, error_msg)
 			if child.get_name() == "VarDecl":
 		 		global_variable[node_identifier] = [node_type, "Var"]
 			else:
@@ -111,7 +115,7 @@ def start():
 	# build global variable 
 	root = parser.root
 	tokens = parser.tokens
-	idSymbol.append(build_idSymbol(root))
+	idSymbol.append(build_idSymbol(root, tokens))
  
 	# start to check type
 	checking(root, tokens)
@@ -122,7 +126,7 @@ def checking(root, tokens=None):
 	i = 0
 	for child in root.children:
 		# build local varibale
-		idSymbol.append(build_idSymbol(child))	
+		idSymbol.append(build_idSymbol(child, tokens))	
 		
 		checking(child, tokens)		
 
